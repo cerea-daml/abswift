@@ -1,0 +1,71 @@
+hydra:
+  job:
+    chdir: True
+  run:
+    dir: ./outputs/
+
+
+dataset:
+  data_dir: /path/to/the/dataset
+  volume_output_fields: ['velocity', 'pressure', 'pottemp', 'log-k', 'log-epsilon']
+  ground_feature: ['invlmo', 'z0']
+  position_scale: 1000
+
+collator:
+  num_buildings_points: 4096
+  num_ground_points: 4096
+  num_buildings_supernodes: 1024
+  num_ground_supernodes: 1024
+  num_volume_anchor_points: 8192
+  volume_fields: ${dataset.volume_output_fields}
+  use_query_positions: False #faster for training, with small performance loss according to paper
+
+model:
+  ndim: 3  # number of coordinates (typicaly 3 for 3D geometries)
+  input_dim_buildings: 3
+  input_dim_ground: 5
+  input_dim_profile: 256 #64 * 4
+  output_dim: {"velocity":3, "pressure":1, "pottemp":1, "log-k":1, "log-epsilon":1}
+  # model
+  dim: 192  # dimension of a ViT-tiny
+  num_heads: 3  # number of attention heads in a ViT-tiny
+  # "p": weight-shared cross-attention block to the geometry branch outputs
+  # "s" weight-shared split attention block within surface/volume
+  # "c" weight-shared cross-attention block between surface/volume
+  geometry_preprocessor_blocks: "sc"
+  geometry_volume_blocks: "scscsc"
+  n_volume_decoder_blocks: 4
+  radius_buildings: 1   # radius for supernode pooling
+  radius_ground: 5
+  
+
+scheduler:
+  initial_lr: 1.E-3
+  decay_rate: 1.E-5
+  weight_decay: 1.E-5
+  decay_pseudo_epochs: 8
+
+training:
+  batch_size: 1 #not implemented beyond
+  epochs: 500
+  num_dataloader_workers: 1
+  ckpt_path: "./checkpoints"
+
+validation:
+  batch_size: 1
+  num_dataloader_workers: 1
+
+
+#optimisations
+use_amp: True
+use_graphs: False
+pin_memory: True
+num_workers: 2
+line_profiler: False
+torch_profiler: False
+
+# inference
+inference:
+  idx: 34 #idx of the case we want to run inference on
+  plot_height: 2 #height at which to plot the 2d slice, in m
+  weights_path: trained_model_ckpt
