@@ -1,4 +1,4 @@
-# AB-SWIFT: Anchored Branched Steady-state WInd Transformer
+# AB-SWIFT: Anchored Branched Steady-state WInd Flow Transformer
 
 ![Texte alternatif](model_architecture.png).
 
